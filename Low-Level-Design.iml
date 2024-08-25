@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/TicTacToe/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Elevator/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ZoomCar/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Logger/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
