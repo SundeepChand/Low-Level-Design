@@ -9,9 +9,19 @@
       <sourceFolder url="file://$MODULE_DIR$/ZoomCar/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Logger/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MultiThreading/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Snake-and-Ladder/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="projectlombok.lombok" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/jetbrains/annotations/20.1.0/annotations-20.1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
