@@ -14,6 +14,7 @@ public class SharedResource {
 		System.out.println("consumeItem method invoked by: " + Thread.currentThread().getName());
 
 		// using while loop to avoid "spurious wake-up", sometimes because of system noise.
+		// Info on "spurious wake-up" https://stackoverflow.com/a/25096851
 		while (!itemAvailable) {
 			try {
 				System.out.println("Thread " + Thread.currentThread().getName() + " is waiting now");
