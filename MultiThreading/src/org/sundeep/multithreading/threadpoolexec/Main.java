@@ -21,6 +21,7 @@ public class Main {
         executor.allowCoreThreadTimeOut(true);
 
         for (int i = 0; i < 7; i++) {
+            // We are passing a Runnable interface to the executor
             executor.submit(() -> {
                 try {
                     Thread.sleep(5000);
@@ -47,6 +48,7 @@ class MyCustomThreadFactory implements ThreadFactory {
     }
 }
 
+// The default alternative to this is to use
 class MyCustomRejectedHandler implements RejectedExecutionHandler {
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
