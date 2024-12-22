@@ -15,15 +15,26 @@ public class CallableAndFuture {
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.AbortPolicy());
 
+        // The future object is used to model the result of an asynchronous operation.
+
         // There are 3 overloaded versions of executor.submit method.
 
         // Usecase1: executor.submit(Runnable task)
         // Here we are passing a Runnable interface to the executor, since the method does not return a value.
         // Since we don't know the type of the Future here, we use wild-card in type parameter to catch the result.
-        Future<?> future1 = executor.submit(() -> System.out.println("Task 1 executing in thread " + Thread.currentThread().getName()));
+        Future<?> future1 = executor.submit(() -> {
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                System.out.println("exception in sleep: " + e.getMessage());
+            }
+            System.out.println("Task 1 executing in thread " + Thread.currentThread().getName());
+        });
         try {
+            System.out.println("Is Future 1 done (before get): " + future1.isDone());
             Object obj = future1.get();
             System.out.println("Result of task 1 (The task returned nothing): " + (obj == null));
+            System.out.println("Is Future 1 done (after get): " + future1.isDone());
         } catch (Exception e) {
             System.out.println("Error in waiting for 1st future to complete");
         }
