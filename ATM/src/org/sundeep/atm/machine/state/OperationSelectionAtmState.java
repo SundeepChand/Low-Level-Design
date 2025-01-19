@@ -4,8 +4,6 @@ import org.sundeep.atm.machine.Atm;
 import org.sundeep.atm.machine.processor.OperationDto;
 import org.sundeep.atm.machine.processor.OperationProcessor;
 
-import java.util.Scanner;
-
 public class OperationSelectionAtmState extends AtmState {
     private final OperationProcessor operationProcessor;
 

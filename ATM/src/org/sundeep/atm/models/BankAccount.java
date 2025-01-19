@@ -4,12 +4,10 @@ import org.sundeep.vending.machine.state.exceptions.InsufficientBalanceException
 
 public class BankAccount {
     private String accountNo;
-    private Card card;
     private double balance;
 
     public BankAccount(String accountNo, Card card, double initialBalance) {
         this.accountNo = accountNo;
-        this.card = card;
         this.balance = initialBalance;
         card.setAssociatedBankAccount(this);
     }

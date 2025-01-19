@@ -3,7 +3,6 @@ package org.sundeep.atm.machine.state;
 import org.sundeep.atm.exceptions.InvalidCredentialException;
 import org.sundeep.atm.machine.Atm;
 import org.sundeep.atm.models.Card;
-import org.sundeep.zoomcar.models.User;
 
 public abstract class AtmState {
     protected Atm atm;
