@@ -358,27 +358,114 @@ class BalanceSheetService {
     }
 }
 
-class ExpenseService {
-    private final UserService userService;
-    private final GroupService groupService;
-    private final BalanceSheetService balanceSheetService;
+class AddExpenseDto {
+    private final String expenseName;
+    private final String fromUserId;
+    private final String groupId;
+    private final Money amountSpent;
+    private final SplitType splitType;
+    // optional when splitType is EQUAL. Mandatory for all other cases.
+    private final List<Split> splits;
 
-    private final Map<String, List<Expense>> groupIdToExpensesMap;
-
-    public ExpenseService(BalanceSheetService balanceSheetService, UserService userService, GroupService groupService) {
-        this.balanceSheetService = balanceSheetService;
-        this.groupService = groupService;
-        this.userService = userService;
-        this.groupIdToExpensesMap = new HashMap<>();
+    public String getExpenseName() {
+        return expenseName;
     }
 
-    public void addExpenseEqualSplit(String name, String fromUserId, String groupId, Money amountSpent) {
-        Group fetchedGroup = groupService.getById(groupId);
+    public String getFromUserId() {
+        return fromUserId;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public Money getAmountSpent() {
+        return amountSpent;
+    }
+
+    public SplitType getSplitType() {
+        return splitType;
+    }
+
+    public List<Split> getSplits() {
+        return splits;
+    }
+
+    public AddExpenseDto(String expenseName, String fromUserId, String groupId, Money amountSpent, SplitType splitType, List<Split> splits) {
+        this.expenseName = expenseName;
+        this.fromUserId = fromUserId;
+        this.groupId = groupId;
+        this.amountSpent = amountSpent;
+        this.splitType = splitType;
+        this.splits = splits;
+    }
+}
+
+class ExpenseProcessorFactory {
+    private final EqualSplitExpenseProcessor equalSplitExpenseProcessor;
+
+    public ExpenseProcessorFactory(UserService userService, GroupService groupService, Map<String, List<Expense>> groupIdToExpensesMap) {
+        this.equalSplitExpenseProcessor = new EqualSplitExpenseProcessor(userService, groupService, groupIdToExpensesMap);
+    }
+
+    public ExpenseProcessor getExpenseValidator(AddExpenseDto data) throws IllegalArgumentException {
+        switch (data.getSplitType()) {
+            case SPLIT_TYPE_EQUAL:
+                return equalSplitExpenseProcessor;
+            case SPLIT_TYPE_PERCENTAGE:
+            case SPLIT_TYPE_UNEQUAL:
+            default:
+                throw new IllegalArgumentException("unsupported split type passed " + data.getSplitType());
+        }
+    }
+}
+
+abstract class ExpenseProcessor {
+    protected final UserService userService;
+    protected final GroupService groupService;
+    protected final Map<String, List<Expense>> groupIdToExpensesMap;
+
+    public ExpenseProcessor(UserService userService, GroupService groupService, Map<String, List<Expense>> groupIdToExpensesMap) {
+        this.groupService = groupService;
+        this.userService = userService;
+        this.groupIdToExpensesMap = groupIdToExpensesMap;
+    }
+
+    abstract void validateExpenseInput(AddExpenseDto data) throws IllegalArgumentException;
+
+    abstract public void addExpense(AddExpenseDto addExpenseDto);
+}
+
+class EqualSplitExpenseProcessor extends ExpenseProcessor {
+    public EqualSplitExpenseProcessor(UserService userService, GroupService groupService, Map<String, List<Expense>> groupIdToExpensesMap) {
+        super(userService, groupService, groupIdToExpensesMap);
+    }
+
+    @Override
+    public void validateExpenseInput(AddExpenseDto data) throws IllegalArgumentException {
+        // Basic checks that the field names are present
+        if (data.getSplitType() != SplitType.SPLIT_TYPE_EQUAL) {
+            throw new IllegalArgumentException("Invalid split type " + data.getSplitType() + " for equal expense split validator");
+        }
+        if (data.getSplits() != null) {
+            throw new IllegalArgumentException("Individual splits must be nil for the API");
+        }
+        if (data.getExpenseName().isBlank() || data.getGroupId().isBlank() || data.getFromUserId().isBlank()) {
+            throw new IllegalArgumentException("Empty parameters passed for equal split");
+        }
+        if (data.getAmountSpent().getAmount() <= 0) {
+            throw new IllegalArgumentException("Invalid amount passed for equal split");
+        }
+    }
+
+    @Override
+    public void addExpense(AddExpenseDto addExpenseDto) {
+        Group fetchedGroup = groupService.getById(addExpenseDto.getGroupId());
         if (fetchedGroup == null) {
             return;
         }
 
-        User paidByUser = userService.getById(fromUserId);
+        User paidByUser = userService.getById(addExpenseDto.getFromUserId());
         if (paidByUser == null) {
             return;
         }
@@ -386,12 +473,17 @@ class ExpenseService {
         // Calculate the balances for each of the users and update in their balance sheet.
         List<User> allUsers = fetchedGroup.getUsers();
         int nUsers = allUsers.size();
-        double share = amountSpent.getAmount() / nUsers;
+        double share = addExpenseDto.getAmountSpent().getAmount() / nUsers;
 
-        Expense curExpense = new Expense(name, amountSpent, SplitType.SPLIT_TYPE_EQUAL, paidByUser);
+        Expense curExpense = new Expense(
+                addExpenseDto.getExpenseName(),
+                addExpenseDto.getAmountSpent(),
+                SplitType.SPLIT_TYPE_EQUAL,
+                paidByUser
+        );
 
         for (User user: allUsers) {
-            if (user.getId().equals(fromUserId)) {
+            if (user.getId().equals(addExpenseDto.getFromUserId())) {
                 continue;
             }
             Money shareAmount = new Money(share, "INR");
@@ -405,8 +497,29 @@ class ExpenseService {
             user.getBalanceSheet().addNewBalanceForUser(paidByUser, paidForUserBalance);
         }
 
-        groupIdToExpensesMap.put(groupId, groupIdToExpensesMap.getOrDefault(groupId, new ArrayList<>()));
-        groupIdToExpensesMap.get(groupId).add(curExpense);
+        groupIdToExpensesMap.put(
+                addExpenseDto.getGroupId(),
+                groupIdToExpensesMap.getOrDefault(addExpenseDto.getGroupId(), new ArrayList<>())
+        );
+        groupIdToExpensesMap.get(addExpenseDto.getGroupId()).add(curExpense);
+    }
+}
+
+class ExpenseService {
+
+    private final Map<String, List<Expense>> groupIdToExpensesMap;
+
+    private final ExpenseProcessorFactory expenseProcessorFactory;
+
+    public ExpenseService(BalanceSheetService balanceSheetService, UserService userService, GroupService groupService) {
+        this.groupIdToExpensesMap = new HashMap<>();
+        this.expenseProcessorFactory = new ExpenseProcessorFactory(userService, groupService, groupIdToExpensesMap);
+    }
+
+    public void addExpense(AddExpenseDto addExpenseDto) {
+        ExpenseProcessor expenseProcessor = expenseProcessorFactory.getExpenseValidator(addExpenseDto);
+        expenseProcessor.validateExpenseInput(addExpenseDto);
+        expenseProcessor.addExpense(addExpenseDto);
     }
 
     public void printExpensesForGroup(String groupId) {
@@ -447,18 +560,22 @@ public class Splitwise {
 
         groupService.createGroup(group1);
 
-        expenseService.addExpenseEqualSplit(
+        expenseService.addExpense(new AddExpenseDto(
                 "Breakfast",
                 user1.getId(),
                 group1.getId(),
-                new Money(90, "INR")
-        );
-        expenseService.addExpenseEqualSplit(
+                new Money(90, "INR"),
+                SplitType.SPLIT_TYPE_EQUAL,
+                null
+        ));
+        expenseService.addExpense(new AddExpenseDto(
                 "Lunch",
                 user2.getId(),
                 group1.getId(),
-                new Money(210, "INR")
-        );
+                new Money(210, "INR"),
+                SplitType.SPLIT_TYPE_EQUAL,
+                null
+        ));
 
         expenseService.printExpensesForGroup(group1.getId());
         user1.getBalanceSheet().display();
