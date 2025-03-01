@@ -1,13 +1,13 @@
 package FraudDetection.models;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 public class Transaction {
     String userId;
     double amount;
     String location;
     String deviceId;
-    Date txnTime;
+    ZonedDateTime txnTime;
     // Should be an enum, taking as string due to time constraint
     String status;
 
@@ -19,7 +19,7 @@ public class Transaction {
         this.status = status;
     }
 
-    public Date getTxnTime() {
+    public ZonedDateTime getTxnTime() {
         return txnTime;
     }
 
@@ -39,7 +39,7 @@ public class Transaction {
         return deviceId;
     }
 
-    public Transaction(String userId, double amount, String location, String deviceId, Date txnTime) {
+    public Transaction(String userId, double amount, String location, String deviceId, ZonedDateTime txnTime) {
         this.userId = userId;
         this.amount = amount;
         this.location = location;

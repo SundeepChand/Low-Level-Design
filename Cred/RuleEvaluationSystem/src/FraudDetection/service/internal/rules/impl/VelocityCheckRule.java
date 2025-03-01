@@ -28,18 +28,18 @@ public class VelocityCheckRule implements Rule {
 
         previousEvents.add(currentEvent);
         previousEvents.sort((Event a, Event b) -> {
-            if (a.getEventTimestamp().before(b.getEventTimestamp())) {
+            if (a.getEventTimestamp().isBefore(b.getEventTimestamp())) {
                 return -1;
-            } else if (a.getEventTimestamp().after(b.getEventTimestamp())) {
+            } else if (a.getEventTimestamp().isAfter(b.getEventTimestamp())) {
                 return 1;
             }
             return 0;
         });
 
-        long durationWindowOfEventsMillis = Math.abs(
-                previousEvents.getLast().getEventTimestamp().getTime() -
-                previousEvents.getFirst().getEventTimestamp().getTime()
-        );
+        long durationWindowOfEventsMillis = (long)(Math.abs(
+                previousEvents.getLast().getEventTimestamp().getNano() -
+                previousEvents.getFirst().getEventTimestamp().getNano()
+        ) / 1e6);
 
         if (durationWindowOfEventsMillis > timeDurationForFlagMillis) {
             return new EvaluateRuleResponseDto(RuleEvaluationResult.PASS, RuleEvaluationErrorStrategy.CONTINUE_EXECUTION);

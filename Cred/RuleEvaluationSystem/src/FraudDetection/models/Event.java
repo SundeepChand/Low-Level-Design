@@ -1,15 +1,15 @@
 package FraudDetection.models;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 public abstract class Event {
     private String eventId;
     private String eventLocation;
     private String deviceId;
     private Object payload;
-    private Date eventTimestamp;
+    private ZonedDateTime eventTimestamp;
 
-    public Event(String eventId, String eventLocation, String deviceId, Object payload, Date eventTimestamp) {
+    public Event(String eventId, String eventLocation, String deviceId, Object payload, ZonedDateTime eventTimestamp) {
         this.eventId = eventId;
         this.eventLocation = eventLocation;
         this.deviceId = deviceId;
@@ -33,7 +33,7 @@ public abstract class Event {
         return payload;
     }
 
-    public Date getEventTimestamp() {
+    public ZonedDateTime getEventTimestamp() {
         return eventTimestamp;
     }
 }

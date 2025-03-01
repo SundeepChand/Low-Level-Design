@@ -9,6 +9,7 @@ import FraudDetection.service.internal.rules.impl.LocationAnomalyCheck;
 import FraudDetection.service.internal.rules.impl.MultipleFailuresCheck;
 import FraudDetection.service.internal.rules.impl.VelocityCheckRule;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,15 @@ public class Main {
     private static void case1NoPreviousEvents() {
         List<Event> previousEvents = new ArrayList<>();
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(1000)));
+        Event currentEvent = new TransactionEvent("1",
+                new Transaction(
+                        "123",
+                        1000,
+                        "NY",
+                        "dev-xyz",
+                        ZonedDateTime.parse("2025-03-01T20:30:00+05:30")
+                )
+        );
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
@@ -49,14 +58,14 @@ public class Main {
     private static void case2VelocityCheck() {
 
         List<Event> previousEvents = new ArrayList<>();
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600100))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600200))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600300))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600400))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(601000))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:01+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:02+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:03+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:04+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:05+05:30"))));
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(603000)));
+        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:10+05:30")));
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
@@ -68,10 +77,10 @@ public class Main {
 
     private static void case3LocationCheck() {
         List<Event> previousEvents = new ArrayList<>();
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600100))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:01+05:30"))));
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(1000)));
+        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:02+05:30")));
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
@@ -85,9 +94,9 @@ public class Main {
 
         List<Event> previousEvents = new ArrayList<>();
 
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"))));
 
-        Transaction txn = new Transaction("123", 1000, "NY", "dev-xyz", new Date(1000));
+        Transaction txn = new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:05+05:30"));
         txn.setStatus("FAIL");
         Event currentEvent = new TransactionEvent("1", txn);
 
@@ -101,11 +110,11 @@ public class Main {
 
     private static void case5MultiplePreviousFailed() {
         List<Event> previousEvents = new ArrayList<>();
-        Transaction txn = new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000));
+        Transaction txn = new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"));
         txn.setStatus("FAIL");
         previousEvents.add(new TransactionEvent("1", txn));
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(1000)));
+        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:05+05:30")));
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
@@ -117,11 +126,11 @@ public class Main {
 
     private static void case6PreviousTransactionsAreValid() {
         List<Event> previousEvents = new ArrayList<>();
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(1200000))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(2400000))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:05+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:10+05:30"))));
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(3400000)));
+        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:20+05:30")));
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
@@ -133,14 +142,14 @@ public class Main {
 
     private static void case8VelocityAndLocationCheck() {
         List<Event> previousEvents = new ArrayList<>();
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600000))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600100))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "Russia", "dev-xyz", new Date(600200))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600300))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(600400))));
-        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(601000))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:00+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:01+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "Russia", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:02+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:03+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:04+05:30"))));
+        previousEvents.add(new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:05+05:30"))));
 
-        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", new Date(1000)));
+        Event currentEvent = new TransactionEvent("1", new Transaction("123", 1000, "NY", "dev-xyz", ZonedDateTime.parse("2025-03-01T20:30:06+05:30")));
 
         boolean isFraudulent = fraudSystem.processEvent(new ProcessEventRequestDto(
                 previousEvents,
