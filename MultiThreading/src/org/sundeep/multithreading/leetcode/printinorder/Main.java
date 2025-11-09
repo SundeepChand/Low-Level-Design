@@ -85,6 +85,42 @@ class SolutionMonitorLockWait {
     }
 }
 
+class SolutionMonitorLockWait2 {
+    private int order;
+    public SolutionMonitorLockWait2() {
+        order = 1;
+    }
+
+    public synchronized void first(Runnable printFirst) throws InterruptedException {
+        while (order != 1) {
+            wait();
+        }
+        // printFirst.run() outputs "first". Do not change or remove this line.
+        printFirst.run();
+        order = 2;
+        notifyAll();
+    }
+
+    public synchronized void second(Runnable printSecond) throws InterruptedException {
+        while (order != 2) {
+            wait();
+        }
+        // printSecond.run() outputs "second". Do not change or remove this line.
+        printSecond.run();
+        order = 3;
+        notifyAll();
+    }
+
+    public synchronized void third(Runnable printThird) throws InterruptedException {
+        while (order != 3) {
+            wait();
+        }
+        // printThird.run() outputs "third". Do not change or remove this line.
+        printThird.run();
+        notifyAll();
+    }
+}
+
 class SolutionSemaphore {
 
     private final int NUM_THREADS = 3;

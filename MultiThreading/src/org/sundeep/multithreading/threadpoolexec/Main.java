@@ -1,7 +1,5 @@
 package org.sundeep.multithreading.threadpoolexec;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.concurrent.*;
 
 public class Main {
@@ -40,7 +38,7 @@ public class Main {
 // Other alternative is to use Executors.defaultThreadFactory()
 class MyCustomThreadFactory implements ThreadFactory {
     @Override
-    public Thread newThread(@NotNull Runnable r) {
+    public Thread newThread(Runnable r) {
         Thread t = new Thread(r);
         t.setPriority(Thread.NORM_PRIORITY);
         t.setDaemon(false);
