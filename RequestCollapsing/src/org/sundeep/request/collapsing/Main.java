@@ -112,7 +112,7 @@ class BlogServiceCachedCollapsedImpl implements BlogService {
     private final BlogService service;
     private final InMemoryCache<String, Blog> cache = new InMemoryCache<>();
 
-    private final ConcurrentHashMap<String, CompletableFuture<Blog>> inflighRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<Blog>> inflightRequests = new ConcurrentHashMap<>();
 
     public BlogServiceCachedCollapsedImpl(BlogService service) {
         this.service = service;
@@ -124,14 +124,14 @@ class BlogServiceCachedCollapsedImpl implements BlogService {
             return cached;
         }
 
-        CompletableFuture<Blog> future = inflighRequests.computeIfAbsent(id, key ->
+        CompletableFuture<Blog> future = inflightRequests.computeIfAbsent(id, key ->
             CompletableFuture.supplyAsync(() -> {
                 Blog result = service.getBlogById(key);
                 if (result != null) {
                     cache.put(key, result);
                 }
                 return result;
-            }).whenComplete((result, ex) -> inflighRequests.remove(key))
+            }).whenComplete((result, ex) -> inflightRequests.remove(key))
         );
         return future.join();
     }
