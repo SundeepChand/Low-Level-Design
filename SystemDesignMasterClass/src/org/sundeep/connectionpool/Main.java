@@ -49,6 +49,7 @@ class CustomConnectionPool {
         return (Connection) Proxy.newProxyInstance(
             Connection.class.getClassLoader(),
             new Class<?>[]{Connection.class},
+            // Lambda expression for PooledConnectionHandler
             (proxy, method, args) -> {
                 if (method.getName().equals("close")) {
                     this.releaseConnection(conn);
