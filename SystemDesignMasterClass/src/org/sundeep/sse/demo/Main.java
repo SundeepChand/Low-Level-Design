@@ -7,7 +7,66 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+class LongPollingServer {
+
+    private static final BlockingQueue<String> eventQueue =
+            new LinkedBlockingQueue<>(3);
+
+    public static void handlePoll(HttpExchange exchange) throws IOException {
+
+        if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
+            sendResponse(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        try {
+            // Wait up to 10 seconds
+            String event = eventQueue.poll(10, TimeUnit.SECONDS);
+
+            if (event == null) {
+                sendResponse(exchange, 204, ""); // No Content
+            } else {
+                sendResponse(exchange, 200, event);
+            }
+
+        } catch (InterruptedException e) {
+            sendResponse(exchange, 500, "Interrupted");
+        }
+    }
+
+    public static void handlePollItemPublish(HttpExchange exchange) throws IOException {
+
+        if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
+            sendResponse(exchange, 405, "Method Not Allowed");
+            return;
+        }
+
+        String body = new String(exchange.getRequestBody().readAllBytes(),
+                StandardCharsets.UTF_8);
+
+        eventQueue.offer(body);
+
+        sendResponse(exchange, 200, "Published");
+    }
+
+    private static void sendResponse(HttpExchange exchange,
+                                     int status,
+                                     String body) throws IOException {
+
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+
+        exchange.sendResponseHeaders(status, bytes.length);
+
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+}
 
 class HealthCheckServer {
     public static void handleHealthCheck(HttpExchange exchange) throws IOException {
@@ -76,7 +135,14 @@ public class Main {
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
 
+        // Normal HTTP Endpoint
         server.createContext("/health", HealthCheckServer::handleHealthCheck);
+        server.createContext("/publish", LongPollingServer::handlePollItemPublish);
+
+        // Long polling Endpoint
+        server.createContext("/poll", LongPollingServer::handlePoll);
+
+        // SSE Endpoint
         server.createContext("/events", SseServer::handleSse);
 
         server.setExecutor(Executors.newCachedThreadPool());

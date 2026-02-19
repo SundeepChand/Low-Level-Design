@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Logs Streamer</title>
+</head>
+<body>
+<h1>Logs Streamer App!</h1>
+<button id="view-logs">Stream Logs</button>
+<div id="logs-viewport"></div>
+
+<script>
+    const viewLogsButton = document.getElementById('view-logs');
+    const logsViewport = document.getElementById('logs-viewport');
+
+    let logsSource = null;
+
+    let isStreaming = false;
+
+    viewLogsButton.addEventListener('click', () => {
+      if (isStreaming) {
+        logsSource.close();
+        logsSource = null;
+        viewLogsButton.textContent = 'Stream logs';
+      } else {
+        logsSource = new EventSource('/logs/stream');
+        logsViewport.innerHTML = '';
+        logsSource.onmessage = (event) => {
+          console.log('Received log: ', event);
+          const data = event.data;
+
+          const row = document.createElement('p');
+          row.innerHTML = data;
+          logsViewport.appendChild(row);
+        }
+        viewLogsButton.textContent = 'Stop stream';
+      }
+      isStreaming = !isStreaming;
+    });
+</script>
+</body>
+</html>
