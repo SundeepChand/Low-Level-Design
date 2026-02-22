@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.Executors;
 
 class Config {
@@ -28,7 +29,7 @@ class LogsWriter {
                 fileOutputStream.write(logEntry.getBytes());
                 fileOutputStream.flush();
                 try {
-                    Thread.sleep((int) (1000 * (Math.random() * 2 + 1))); // Simulate log generation every second
+                    Thread.sleep((long) (1000 * (Math.random() * 2 + 1))); // Simulate log generation every second
                 } catch (Exception e) {
                     System.out.println("Log generation stopped. Reason: " + e.getMessage());
                     break;
@@ -114,7 +115,7 @@ public class Main {
 
         server.createContext("/logs/stream", serverHandler::streamLogs);
 
-        server.setExecutor(Executors.newFixedThreadPool(10));
+        server.setExecutor(Executors.newFixedThreadPool(2));
         server.start();
         System.out.println("HTTP server started on http://localhost:" + Config.SERVER_PORT);
     }
