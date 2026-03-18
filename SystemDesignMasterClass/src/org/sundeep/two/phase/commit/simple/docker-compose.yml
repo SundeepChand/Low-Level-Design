@@ -1,0 +1,16 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: FOOD_DELIVERY
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+    ports:
+      - "3306:3306"
+    command:
+      --server-id=1
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d
