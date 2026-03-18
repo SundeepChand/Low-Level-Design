@@ -10,17 +10,23 @@ public class OrderService {
 
     public void placeOrder(String orderId) {
         // Try to reserve food and agent parallelly.
-        String reserveFoodUrl = UrlConfig.FOOD_SERVICE_URL + "/prepare?orderId=" + orderId;
-        CompletableFuture<HttpResponse<String>> reserveFoodResponse = HttpClient.getAsync(reserveFoodUrl);
+//        String reserveFoodUrl = UrlConfig.FOOD_SERVICE_URL + "/prepare?orderId=" + orderId;
+//        CompletableFuture<HttpResponse<String>> reserveFoodResponse = HttpClient.getAsync(reserveFoodUrl);
+//
+//        String reserveAgentUrl = UrlConfig.DELIVERY_SERVICE_URL + "/prepare?orderId=" + orderId;
+//        CompletableFuture<HttpResponse<String>> reserveAgentResponse = HttpClient.getAsync(reserveAgentUrl);
+//
+//        // Make this sequential to avoid the scenario where we reserve an agent but fail to reserve a food item and hence
+//        // not be able to proceed to commit phase. This can lead to a lot of locked agents and food items and reduce the
+//        // number of successful transactions.
+//        CompletableFuture.allOf(reserveAgentResponse, reserveFoodResponse).join();
 
-        String reserveAgentUrl = UrlConfig.DELIVERY_SERVICE_URL + "/prepare?orderId=" + orderId;
-        CompletableFuture<HttpResponse<String>> reserveAgentResponse = HttpClient.getAsync(reserveAgentUrl);
-
-        CompletableFuture.allOf(reserveAgentResponse, reserveFoodResponse).join();
+        HttpResponse<String> reserveAgentResponse = HttpClient.get(UrlConfig.DELIVERY_SERVICE_URL + "/prepare?orderId=" + orderId);
+        HttpResponse<String> reserveFoodResponse = HttpClient.get(UrlConfig.FOOD_SERVICE_URL + "/prepare?orderId=" + orderId);
 
         try {
-            int agentId = Integer.parseInt(reserveAgentResponse.join().body());
-            int foodId = Integer.parseInt(reserveFoodResponse.join().body());
+            int agentId = Integer.parseInt(reserveAgentResponse.body());
+            int foodId = Integer.parseInt(reserveFoodResponse.body());
             System.out.println("[OrderService][INFO]: Order " + orderId + " reserved with agent " + agentId + " and food " + foodId);
 
             // If both reservations are successful, proceed to commit phase
