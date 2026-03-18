@@ -1,22 +1,24 @@
 package org.sundeep.two.phase.commit.simple.food.service;
 
-import org.sundeep.two.phase.commit.simple.delivery.confgs.DeliveryDb;
+import org.sundeep.two.phase.commit.simple.food.configs.DeliveryDb;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class FoodService {
     private final DeliveryDb deliveryDb = new DeliveryDb();
 
-    public int reserveFoodForOrder(String orderId) throws IOException {
+    public int reserveFoodForOrder(String orderId) throws IOException, SQLException {
         // Logic to reserve an agent for the given order ID
         // This could involve checking available food, reserving one, and returning the food details
         // Reserve the first available agent for assignment
         Integer foodId = null;
 
-        try (Connection conn = deliveryDb.getDataSource().getConnection()) {
+        Connection conn = deliveryDb.getDataSource().getConnection();
+        try {
 
             PreparedStatement selectStmt = conn.prepareStatement("SELECT ID, RESERVED_FOR, CURRENT_ORDER FROM FOODS " +
                     "WHERE RESERVED_FOR IS NULL AND CURRENT_ORDER IS NULL LIMIT 1 FOR UPDATE");
@@ -40,18 +42,25 @@ public class FoodService {
                 throw new IOException("Failed to reserve agent for order " + orderId);
             }
 
+            conn.commit();
+            System.out.println("[ReserveFood][INFO]: Reserved food " + foodId + " to order " + orderId + " for assignment");
+
         } catch (Exception e) {
+            conn.rollback();
             System.out.println("[ReserveFood][ERROR]: " + e.getMessage());
             throw new IOException("Failed to reserve agent for order " + orderId, e);
+        } finally {
+            conn.close();
         }
-        System.out.println("[ReserveFood][INFO]: Reserved food " + foodId + " to order " + orderId + " for assignment");
         return foodId;
     }
 
-    public void assignFoodToOrder(String orderId, String foodId) throws IOException {
+    public void assignFoodToOrder(String orderId, String foodId) throws IOException, SQLException {
         // Logic to assign the reserved food to the order
         // This could involve updating the order status, notifying the agent, etc.
-        try (Connection conn = deliveryDb.getDataSource().getConnection()) {
+        Connection conn = deliveryDb.getDataSource().getConnection();
+
+        try {
 
             PreparedStatement selectStmt = conn.prepareStatement("SELECT ID, RESERVED_FOR, CURRENT_ORDER FROM FOODS " +
                     "WHERE RESERVED_FOR = ? AND CURRENT_ORDER IS NULL AND ID = ? FOR UPDATE");
@@ -75,14 +84,20 @@ public class FoodService {
             int rowsUpdated = updateStmt.executeUpdate();
 
             if (rowsUpdated == 0) {
-                conn.rollback();
                 throw new IOException("Failed to assign food for order " + orderId);
             }
 
+            conn.commit();
+
+            System.out.println("[AssignFood][INFO]: Assigned food " + foodId + " to order " + orderId + " successfully");
+
         } catch (Exception e) {
+
+            conn.rollback();
             System.out.println("[AssignFood][ERROR]: " + e.getMessage());
             throw new IOException("Failed to assign food for order " + orderId, e);
+        } finally {
+            conn.close();
         }
-        System.out.println("[AssignFood][INFO]: Assigned food " + foodId + " to order " + orderId + " successfully");
     }
 }

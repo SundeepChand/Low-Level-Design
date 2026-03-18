@@ -17,6 +17,8 @@ public class DeliveryDb {
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
+        config.setAutoCommit(false);
+
         dataSource = new HikariDataSource(config);
     }
 

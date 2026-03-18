@@ -2,7 +2,7 @@ package org.sundeep.two.phase.commit.simple.delivery;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import org.sundeep.two.phase.commit.simple.delivery.confgs.ServerConfig;
+import org.sundeep.two.phase.commit.simple.delivery.configs.ServerConfig;
 import org.sundeep.two.phase.commit.simple.delivery.service.AgentService;
 
 import java.io.IOException;

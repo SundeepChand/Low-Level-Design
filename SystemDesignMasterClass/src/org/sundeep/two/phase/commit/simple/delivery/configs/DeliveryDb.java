@@ -1,4 +1,4 @@
-package org.sundeep.two.phase.commit.simple.delivery.confgs;
+package org.sundeep.two.phase.commit.simple.delivery.configs;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -16,6 +16,9 @@ public class DeliveryDb {
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+        // Disable autocommit by default
+        config.setAutoCommit(false);
 
         dataSource = new HikariDataSource(config);
     }
