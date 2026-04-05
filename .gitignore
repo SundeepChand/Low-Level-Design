@@ -3,3 +3,5 @@ out
 target
 *.pem
 *.p12
+shared_counter.txt
+*.log
